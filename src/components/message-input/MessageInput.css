@@ -5,7 +5,7 @@
 }
 
 .message-input-form {
-	background-color: #fff;
+	background-color: #e3e3e3;
 	border-radius: 25px;
 	padding: 8px 12px;
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -29,10 +29,11 @@
 	padding: 8px 4px;
 	max-height: 120px;
 	background: transparent;
+	color: #303030;
 }
 
 .message-textarea::placeholder {
-	color: #999;
+	color: #303030;
 }
 
 .message-textarea:disabled {
@@ -45,7 +46,7 @@
 	height: 40px;
 	border: none;
 	border-radius: 50%;
-	background-color: #007bff;
+	background-color: #70b5ff;
 	color: white;
 	cursor: pointer;
 	display: flex;
@@ -126,7 +127,7 @@
 }
 
 /* Темная тема */
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
 	.message-input-container {
 		background-color: #2d3748;
 		border-top-color: #4a5568;
@@ -145,4 +146,4 @@
 	.message-textarea::placeholder {
 		color: #a0aec0;
 	}
-}
+} */
