@@ -1,0 +1,148 @@
+.message-input-container {
+	padding: 20px;
+	background-color: #f0f0f0;
+	border-top: 1px solid #e0e0e0;
+}
+
+.message-input-form {
+	background-color: #fff;
+	border-radius: 25px;
+	padding: 8px 12px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	border: 1px solid #e0e0e0;
+}
+
+.input-wrapper {
+	display: flex;
+	align-items: flex-end;
+	gap: 10px;
+}
+
+.message-textarea {
+	flex: 1;
+	border: none;
+	outline: none;
+	resize: none;
+	font-family: inherit;
+	font-size: 14px;
+	line-height: 1.4;
+	padding: 8px 4px;
+	max-height: 120px;
+	background: transparent;
+}
+
+.message-textarea::placeholder {
+	color: #999;
+}
+
+.message-textarea:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.send-button {
+	width: 40px;
+	height: 40px;
+	border: none;
+	border-radius: 50%;
+	background-color: #007bff;
+	color: white;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.2s ease;
+	flex-shrink: 0;
+}
+
+.send-button:hover:not(.disabled) {
+	background-color: #0056b3;
+	transform: scale(1.05);
+}
+
+.send-button:active:not(.disabled) {
+	transform: scale(0.95);
+}
+
+.send-button.disabled {
+	background-color: #ccc;
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+.loading-spinner {
+	width: 16px;
+	height: 16px;
+	border: 2px solid transparent;
+	border-top: 2px solid white;
+	border-radius: 50%;
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	0% {
+		transform: rotate(0deg);
+	}
+
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+.message-info {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: 4px;
+}
+
+.char-count {
+	font-size: 0.75rem;
+	color: #999;
+}
+
+.char-count.warning {
+	color: #ff6b35;
+}
+
+.char-count.error {
+	color: #dc3545;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+	.message-input-container {
+		padding: 15px;
+	}
+
+	.message-input-form {
+		border-radius: 20px;
+		padding: 6px 10px;
+	}
+
+	.send-button {
+		width: 36px;
+		height: 36px;
+	}
+}
+
+/* Темная тема */
+@media (prefers-color-scheme: dark) {
+	.message-input-container {
+		background-color: #2d3748;
+		border-top-color: #4a5568;
+	}
+
+	.message-input-form {
+		background-color: #4a5568;
+		border-color: #718096;
+	}
+
+	.message-textarea {
+		color: #e2e8f0;
+		background: transparent;
+	}
+
+	.message-textarea::placeholder {
+		color: #a0aec0;
+	}
+}
