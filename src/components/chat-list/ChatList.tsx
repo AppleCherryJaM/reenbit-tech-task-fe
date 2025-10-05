@@ -1,23 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { type Chat } from '../../types/index';
 import { apiService } from '../../services/api';
+import {ChatModal} from '../components';
 import './ChatList.css';
 
 interface ChatListProps {
   onChatSelect: (chat: Chat) => void;
   selectedChatId?: string;
-  onNewChat: () => void;
+  onNewChat: (chat: Chat) => void; // Изменяем тип - теперь передаем созданный чат
+  onChatUpdate?: (chat: Chat) => void; // Добавляем опциональный callback для обновления
 }
 
 const ChatList: React.FC<ChatListProps> = ({ 
   onChatSelect, 
   selectedChatId, 
-  onNewChat 
+  onNewChat,
+  onChatUpdate 
 }) => {
   const [chats, setChats] = useState<Chat[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingChat, setEditingChat] = useState<Chat | null>(null);
 
   // Загрузка чатов
   const loadChats = async (search?: string) => {
@@ -38,6 +43,30 @@ const ChatList: React.FC<ChatListProps> = ({
   useEffect(() => {
     loadChats(searchTerm);
   }, [searchTerm]);
+
+  // Обработчик создания чата
+  const handleChatCreated = (newChat: Chat) => {
+    setChats(prev => [newChat, ...prev]);
+    onNewChat(newChat); // Передаем созданный чат в родительский компонент
+    setIsModalOpen(false);
+  };
+
+  // Обработчик обновления чата
+  const handleChatUpdated = (updatedChat: Chat) => {
+    setChats(prev => prev.map(chat => 
+      chat.id === updatedChat.id ? updatedChat : chat
+    ));
+    onChatUpdate?.(updatedChat); // Уведомляем родительский компонент об обновлении
+    setIsModalOpen(false);
+    setEditingChat(null);
+  };
+
+  // Открытие модалки для редактирования
+  const handleEditChat = (chat: Chat, e: React.MouseEvent) => {
+    e.stopPropagation(); // Предотвращаем выбор чата
+    setEditingChat(chat);
+    setIsModalOpen(true);
+  };
 
   // Обработчик поиска
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,6 +91,12 @@ const ChatList: React.FC<ChatListProps> = ({
     });
   };
 
+  // Закрытие модалки
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingChat(null);
+  };
+
   if (loading && chats.length === 0) {
     return (
       <div className="chat-list">
@@ -80,7 +115,7 @@ const ChatList: React.FC<ChatListProps> = ({
         <h2>Chats</h2>
         <button 
           className="new-chat-btn"
-          onClick={onNewChat}
+          onClick={() => setIsModalOpen(true)}
           title="Create new chat"
         >
           +
@@ -127,11 +162,20 @@ const ChatList: React.FC<ChatListProps> = ({
                   <span className="chat-name">
                     {chat.firstName} {chat.lastName}
                   </span>
-                  {chat.messages && chat.messages.length > 0 && (
-                    <span className="chat-time">
-                      {formatTime(chat.messages[0].createdAt)}
-                    </span>
-                  )}
+                  <div className="chat-header-actions">
+                    {chat.messages && chat.messages.length > 0 && (
+                      <span className="chat-time">
+                        {formatTime(chat.messages[0].createdAt)}
+                      </span>
+                    )}
+                    <button 
+                      className="edit-chat-btn"
+                      onClick={(e) => handleEditChat(chat, e)}
+                      title="Edit chat"
+                    >
+                      ✎
+                    </button>
+                  </div>
                 </div>
                 
                 <div className="chat-preview">
@@ -142,6 +186,15 @@ const ChatList: React.FC<ChatListProps> = ({
           ))
         )}
       </div>
+
+      {/* Модалка создания/редактирования чата */}
+      <ChatModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onChatCreated={handleChatCreated}
+        onChatUpdated={handleChatUpdated}
+        editChat={editingChat}
+      />
     </div>
   );
 };

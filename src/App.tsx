@@ -11,9 +11,8 @@ function App() {
     setSelectedChat(chat);
   };
 
-  const handleNewChat = () => {
-    // Здесь будет логика открытия модалки создания чата
-    console.log('Open new chat modal');
+  const handleNewChat = (chat: Chat) => {
+    setSelectedChat(chat); 
   };
 
   return (

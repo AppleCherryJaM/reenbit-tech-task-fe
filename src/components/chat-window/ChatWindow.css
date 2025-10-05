@@ -167,6 +167,10 @@
 	border-radius: 50%;
 }
 
+.status-text {
+	color: black;
+}
+
 .status-dot.connected {
 	background-color: #4caf50;
 }

@@ -50,7 +50,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ chat }) => {
     console.log('🔔 Notification received:', notification);
   }, []);
 
-  // Инициализируем улучшенный socket
   const { joinChat, leaveChat, isConnected, manualReconnect } = useSocketEnhanced({
     onNewMessage: handleNewMessage,
     onNotification: handleNotification
@@ -144,7 +143,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ chat }) => {
           <h3>{chat.firstName} {chat.lastName}</h3>
           <div className="connection-status">
             <span className={`status-dot ${isConnected ? 'connected' : 'disconnected'}`}></span>
-            <span>{isConnected ? 'Connected' : 'Disconnected'}</span>
+            <span className='status-text'>{isConnected ? 'Connected' : 'Disconnected'}</span>
             {!isConnected && (
               <button onClick={manualReconnect} className="reconnect-btn">
                 Reconnect

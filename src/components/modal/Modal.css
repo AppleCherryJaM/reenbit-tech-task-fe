@@ -1,0 +1,145 @@
+.modal-backdrop {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1000;
+	padding: 20px;
+	animation: fadeIn 0.2s ease-out;
+}
+
+.modal-container {
+	background: white;
+	border-radius: 12px;
+	box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3);
+	overflow: hidden;
+	animation: slideIn 0.2s ease-out;
+	max-width: 95vw;
+	max-height: 95vh;
+	display: flex;
+	flex-direction: column;
+}
+
+.modal-sm {
+	width: 400px;
+}
+
+.modal-md {
+	width: 500px;
+}
+
+.modal-lg {
+	width: 600px;
+}
+
+.modal-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 20px 24px;
+	border-bottom: 1px solid #e0e0e0;
+	background: #fafafa;
+}
+
+.modal-title {
+	margin: 0;
+	font-size: 1.25rem;
+	font-weight: 600;
+	color: #333;
+}
+
+.modal-close-btn {
+	background: none;
+	border: none;
+	font-size: 1.5rem;
+	cursor: pointer;
+	padding: 4px 8px;
+	border-radius: 4px;
+	color: #666;
+	transition: all 0.2s ease;
+	line-height: 1;
+}
+
+.modal-close-btn:hover {
+	background-color: #e0e0e0;
+	color: #333;
+}
+
+.modal-content {
+	padding: 24px;
+	overflow-y: auto;
+	flex: 1;
+}
+
+/* Анимации */
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes slideIn {
+	from {
+		opacity: 0;
+		transform: translateY(-20px) scale(0.95);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+
+	.modal-sm,
+	.modal-md,
+	.modal-lg {
+		width: 95vw;
+		max-width: 95vw;
+	}
+
+	.modal-header {
+		padding: 16px 20px;
+	}
+
+	.modal-content {
+		padding: 20px;
+	}
+}
+
+/* Темная тема */
+@media (prefers-color-scheme: dark) {
+	.modal-container {
+		background: #2d3748;
+		color: #e2e8f0;
+	}
+
+	.modal-header {
+		background: #4a5568;
+		border-bottom-color: #718096;
+	}
+
+	.modal-title {
+		color: #e2e8f0;
+	}
+
+	.modal-close-btn {
+		color: #a0aec0;
+	}
+
+	.modal-close-btn:hover {
+		background-color: #718096;
+		color: #e2e8f0;
+	}
+}

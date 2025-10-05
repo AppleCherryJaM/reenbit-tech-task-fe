@@ -172,3 +172,50 @@
 .chats-container::-webkit-scrollbar-thumb:hover {
 	background: #a8a8a8;
 }
+
+.chat-header-actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.edit-chat-btn {
+	background: none;
+	border: none;
+	cursor: pointer;
+	padding: 4px 6px;
+	border-radius: 4px;
+	color: #666;
+	font-size: 0.9rem;
+	opacity: 0;
+	transition: all 0.2s ease;
+}
+
+.chat-item:hover .edit-chat-btn {
+	opacity: 1;
+}
+
+.edit-chat-btn:hover {
+	background-color: #f0f0f0;
+	color: #333;
+}
+
+/* Адаптивность для кнопки редактирования */
+@media (max-width: 768px) {
+	.edit-chat-btn {
+		opacity: 1;
+		/* Всегда показываем на мобильных */
+	}
+}
+
+/* Темная тема */
+@media (prefers-color-scheme: dark) {
+	.edit-chat-btn {
+		color: #a0aec0;
+	}
+
+	.edit-chat-btn:hover {
+		background-color: #4a5568;
+		color: #e2e8f0;
+	}
+}
