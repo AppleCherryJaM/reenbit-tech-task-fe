@@ -23,4 +23,11 @@ export const apiService = {
 
   sendMessage: (data: SendMessageRequest): Promise<Message> =>
     axios.post(`${API_BASE}/messages`, data).then(res => res.data),
+
+  // Live Messages
+  startLiveMessages: (): Promise<void> =>
+    axios.post(`${API_BASE}/live-messages/start`).then(res => res.data),
+
+  stopLiveMessages: (): Promise<void> =>
+    axios.post(`${API_BASE}/live-messages/stop`).then(res => res.data),
 };
