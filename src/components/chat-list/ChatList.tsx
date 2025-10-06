@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
+
 import { type Chat } from '../../types/index';
 import { apiService } from '../../services/api';
 import {ChatModal} from '../components';
+
 import './ChatList.css';
 
 interface ChatListProps {
@@ -49,6 +52,7 @@ const ChatList: React.FC<ChatListProps> = ({
     setChats(prev => [newChat, ...prev]);
     onNewChat(newChat); // Передаем созданный чат в родительский компонент
     setIsModalOpen(false);
+		toast.success(`Чат с ${newChat.firstName} ${newChat.lastName} создан!`);
   };
 
   // Обработчик обновления чата
@@ -59,6 +63,7 @@ const ChatList: React.FC<ChatListProps> = ({
     onChatUpdate?.(updatedChat); // Уведомляем родительский компонент об обновлении
     setIsModalOpen(false);
     setEditingChat(null);
+		toast.success('Чат обновлен!');
   };
 
   // Открытие модалки для редактирования
