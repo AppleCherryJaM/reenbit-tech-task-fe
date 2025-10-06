@@ -4,5 +4,9 @@ import MessageInput from "./message-input/MessageInput";
 import Message from "./message/Message";
 import Modal from "./modal/Modal";
 import ChatModal from "./chat-modal/ChatModal";
+import ChatWindow from "./chat-window/ChatWindow";
 
-export { ChatList, WelcomeScreen, MessageInput, Message, Modal, ChatModal };
+export { 
+	ChatList, WelcomeScreen, MessageInput, 
+	Message, Modal, ChatModal, ChatWindow 
+};

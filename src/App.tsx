@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { ChatList, WelcomeScreen } from './components/components';
+import { Toaster } from 'react-hot-toast';
+import { ChatList, WelcomeScreen, ChatWindow } from './components/components';
 import { type Chat } from './types';
+import { SocketProvider } from './contexts/SocketContext';
 import './App.css';
-import ChatWindow from './components/chat-window/ChatWindow';
 
 function App() {
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
@@ -16,21 +17,30 @@ function App() {
   };
 
   return (
-    <div className="app">
-      <ChatList 
-        onChatSelect={handleChatSelect}
-        selectedChatId={selectedChat?.id}
-        onNewChat={handleNewChat}
-      />
-      
-      <div className="chat-screen">
-        {selectedChat ? (
-          <ChatWindow chat={selectedChat}/>
-        ) : (
-          <WelcomeScreen/>
-        )}
+    <SocketProvider>
+      <div className="app">
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            duration: 3000,
+          }}
+        />
+        
+        <ChatList 
+          onChatSelect={handleChatSelect}
+          selectedChatId={selectedChat?.id}
+          onNewChat={handleNewChat}
+        />
+        
+        <div className="chat-screen">
+          {selectedChat ? (
+            <ChatWindow chat={selectedChat}/>
+          ) : (
+            <WelcomeScreen/>
+          )}
+        </div>
       </div>
-    </div>
+    </SocketProvider>
   );
 }
 

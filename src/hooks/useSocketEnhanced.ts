@@ -13,7 +13,7 @@ export const useSocketEnhanced = ({ onNewMessage, onNotification }: UseSocketPro
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
 
   const connect = useCallback(() => {
-    console.log('🔌 Connecting to socket...');
+    console.log('🔌 Connecting to chat socket...');
     
     socketRef.current = io('http://localhost:3000', {
       transports: ['websocket', 'polling'],
@@ -24,39 +24,39 @@ export const useSocketEnhanced = ({ onNewMessage, onNotification }: UseSocketPro
     });
 
     socketRef.current.on('connect', () => {
-      console.log('✅ Socket connected successfully! ID:', socketRef.current?.id);
+      console.log('✅ Chat socket connected! ID:', socketRef.current?.id);
       setIsConnected(true);
       setReconnectAttempts(0);
     });
 
     socketRef.current.on('disconnect', (reason) => {
-      console.log('❌ Socket disconnected. Reason:', reason);
+      console.log('❌ Chat socket disconnected. Reason:', reason);
       setIsConnected(false);
     });
 
     socketRef.current.on('connect_error', (error) => {
-      console.error('🚨 Socket connection error:', error.message);
+      console.error('🚨 Chat socket connection error:', error.message);
       setIsConnected(false);
       setReconnectAttempts(prev => prev + 1);
     });
 
     socketRef.current.on('reconnect_attempt', (attempt) => {
-      console.log(`🔄 Reconnection attempt ${attempt}`);
+      console.log(`🔄 Chat socket reconnection attempt ${attempt}`);
     });
 
     socketRef.current.on('reconnect_failed', () => {
-      console.error('💥 Failed to reconnect after multiple attempts');
+      console.error('💥 Chat socket failed to reconnect after multiple attempts');
     });
 
-    // Обработчики сообщений
+    // Обработчики сообщений для конкретного чата
     socketRef.current.on('message:new', (message: Message) => {
-      console.log('📨 RECEIVED socket message:', message);
+      console.log('📨 CHAT SOCKET: Received message:', message);
       onNewMessage(message);
     });
     
     if (onNotification) {
       socketRef.current.on('notification:new', (notification: any) => {
-        console.log('🔔 Socket notification:', notification);
+        console.log('🔔 Chat socket notification:', notification);
         onNotification(notification);
       });
     }
@@ -66,7 +66,7 @@ export const useSocketEnhanced = ({ onNewMessage, onNotification }: UseSocketPro
     connect();
 
     return () => {
-      console.log('🧹 Cleaning up socket connection');
+      console.log('🧹 Cleaning up chat socket connection');
       if (socketRef.current) {
         socketRef.current.disconnect();
         socketRef.current = null;
@@ -80,7 +80,7 @@ export const useSocketEnhanced = ({ onNewMessage, onNotification }: UseSocketPro
       console.log(`🎯 Joining chat room: chat:${chatId}`);
       socketRef.current.emit('join:chat', chatId);
     } else {
-      console.warn('⚠️ Socket not connected, cannot join chat');
+      console.warn('⚠️ Chat socket not connected, cannot join chat');
     }
   }, [isConnected]);
 

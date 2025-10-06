@@ -14,14 +14,31 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ chat }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [hasNewAutoResponse, setHasNewAutoResponse] = useState(false);
+
+  // Обработчик новых сообщений для этого конкретного чата
+  const handleNewMessage = useCallback((newMessage: MessageType) => {
+    console.log('💬 CHAT WINDOW: New message for this chat:', newMessage);
+    
+    setMessages(prev => {
+      if (prev.some(msg => msg.id === newMessage.id)) {
+        console.log('⚠️ Duplicate message detected, skipping');
+        return prev;
+      }
+      console.log('✅ Adding new message to chat state');
+      return [...prev, newMessage];
+    });
+  }, []);
+
+  // Используем отдельный socket для этого чата
+  const { joinChat, leaveChat, isConnected, manualReconnect } = useSocketEnhanced({
+    onNewMessage: handleNewMessage
+  });
 
   // Загрузка сообщений чата
   const loadMessages = useCallback(async () => {
     try {
       setLoading(true);
       const messagesData = await apiService.getChatMessages(chat.id);
-      console.log('📥 Loaded messages from API:', messagesData.length);
       setMessages(messagesData);
       setError(null);
     } catch (err) {
@@ -31,43 +48,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ chat }) => {
       setLoading(false);
     }
   }, [chat.id]);
-
-  // Обработчик новых сообщений из socket
-  const handleNewMessage = useCallback((newMessage: MessageType) => {
-    console.log('🎯 handleNewMessage called with:', newMessage);
-    setMessages(prev => {
-      if (prev.some(msg => msg.id === newMessage.id)) {
-        console.log('⚠️ Duplicate message detected, skipping');
-        return prev;
-      }
-      console.log('✅ Adding new message to state');
-      return [...prev, newMessage];
-    });
-  }, []);
-
-  // Обработчик уведомлений
-  const handleNotification = useCallback((notification: any) => {
-    console.log('🔔 Notification received:', notification);
-  }, []);
-
-  const { joinChat, leaveChat, isConnected, manualReconnect } = useSocketEnhanced({
-    onNewMessage: handleNewMessage,
-    onNotification: handleNotification
-  });
-
-  // Обработчик отправки сообщения
-  const handleMessageSent = useCallback((newMessage: MessageType) => {
-    console.log('✅ User message sent:', newMessage);
-    setMessages(prev => [...prev, newMessage]);
-    
-    // Запускаем поллинг для авто-ответа только после отправки сообщения
-    setHasNewAutoResponse(true);
-  }, []);
-
-  // Автопрокрутка к последнему сообщению
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
 
   // При смене чата
   useEffect(() => {
@@ -84,39 +64,17 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ chat }) => {
     };
   }, [chat.id, loadMessages, joinChat, leaveChat]);
 
-  // Умный поллинг только когда ожидаем авто-ответ
-  useEffect(() => {
-    if (!hasNewAutoResponse || !chat.id) return;
+  // Обработчик отправки сообщения
+  const handleMessageSent = useCallback((newMessage: MessageType) => {
+    console.log('✅ User message sent:', newMessage);
+    setMessages(prev => [...prev, newMessage]);
+  }, []);
 
-    console.log('⏰ Starting smart polling for auto-response...');
-    
-    const pollInterval = setInterval(() => {
-      loadMessages();
-    }, 1000);
+  // Автопрокрутка к последнему сообщению
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
-    // Останавливаем поллинг через 10 секунд
-    const timeout = setTimeout(() => {
-      console.log('⏹️ Stopping smart polling');
-      setHasNewAutoResponse(false);
-      clearInterval(pollInterval);
-    }, 10000);
-
-    return () => {
-      clearInterval(pollInterval);
-      clearTimeout(timeout);
-    };
-  }, [hasNewAutoResponse, chat.id, loadMessages]);
-
-  // Останавливаем поллинг когда приходит авто-ответ
-  useEffect(() => {
-    const lastMessage = messages[messages.length - 1];
-    if (lastMessage?.type === 'auto' && hasNewAutoResponse) {
-      console.log('✅ Auto-response received, stopping polling');
-      setHasNewAutoResponse(false);
-    }
-  }, [messages, hasNewAutoResponse]);
-
-  // Прокрутка при изменении сообщений
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -134,7 +92,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ chat }) => {
 
   return (
     <div className="chat-window">
-      {/* Заголовок чата с индикатором подключения */}
       <div className="chat-header">
         <div className="chat-avatar">
           {chat.firstName[0]}{chat.lastName[0]}
@@ -153,7 +110,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ chat }) => {
         </div>
       </div>
 
-      {/* Область сообщений */}
       <div className="messages-container">
         {error && (
           <div className="error-message">
@@ -179,9 +135,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ chat }) => {
         )}
       </div>
 
-      {/* Компонент ввода сообщений */}
       <MessageInput 
-        key={chat.id}
         chatId={chat.id}
         onMessageSent={handleMessageSent}
         disabled={loading}
