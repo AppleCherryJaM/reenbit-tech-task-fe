@@ -1,36 +1,29 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+
 import type { Chat, Message as MessageType } from '../../types';
+
 import { apiService } from '../../services/api';
 import { MessageInput, Message } from '../components';
 import { useSocketEnhanced } from '../../hooks/useSocketEnhanced';
+import Header from './components/Header';
+
 import './ChatWindow.css';
 
 interface ChatWindowProps {
   chat: Chat;
 }
 
-const ChatWindow: React.FC<ChatWindowProps> = ({ chat }) => {
+const ChatWindow= ({ chat } : ChatWindowProps) => {
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isLiveMessagesActive, setIsLiveMessagesActive] = useState(false);
 
-  // Обработчик новых сообщений для этого конкретного чата
+  // Обработчик новых сообщений
   const handleNewMessage = useCallback((newMessage: MessageType) => {
-    console.log('💬 CHAT WINDOW: New message for this chat:', newMessage);
-    
-    setMessages(prev => {
-      if (prev.some(msg => msg.id === newMessage.id)) {
-        console.log('⚠️ Duplicate message detected, skipping');
-        return prev;
-      }
-      console.log('✅ Adding new message to chat state');
-      return [...prev, newMessage];
-    });
+    setMessages(prev => [...prev, newMessage]);
   }, []);
 
-  // Используем отдельный socket для этого чата
-  const { joinChat, leaveChat, isConnected, manualReconnect } = useSocketEnhanced({
+  const { joinChat, leaveChat, isConnected } = useSocketEnhanced({
     onNewMessage: handleNewMessage
   });
 
@@ -40,19 +33,31 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ chat }) => {
       setLoading(true);
       const messagesData = await apiService.getChatMessages(chat.id);
       setMessages(messagesData);
-      setError(null);
     } catch (err) {
-      console.error('❌ Error loading messages:', err);
-      setError('Failed to load messages');
+      console.error('Error loading messages:', err);
     } finally {
       setLoading(false);
     }
   }, [chat.id]);
 
+  // Переключение Live Messages
+  const handleLiveMessagesToggle = useCallback(async () => {
+    try {
+      if (isLiveMessagesActive) {
+        await apiService.stopLiveMessages();
+        setIsLiveMessagesActive(false);
+      } else {
+        await apiService.startLiveMessages();
+        setIsLiveMessagesActive(true);
+      }
+    } catch (error) {
+      console.error('Error toggling live messages:', error);
+    }
+  }, [isLiveMessagesActive]);
+
   // При смене чата
   useEffect(() => {
     if (chat.id) {
-      console.log('🔄 Chat changed to:', chat.id);
       loadMessages();
       joinChat(chat.id);
     }
@@ -66,25 +71,18 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ chat }) => {
 
   // Обработчик отправки сообщения
   const handleMessageSent = useCallback((newMessage: MessageType) => {
-    console.log('✅ User message sent:', newMessage);
     setMessages(prev => [...prev, newMessage]);
   }, []);
-
-  // Автопрокрутка к последнему сообщению
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
 
   if (loading && messages.length === 0) {
     return (
       <div className="chat-window">
-        <div className="chat-header">
-          <h3>{chat.firstName} {chat.lastName}</h3>
-        </div>
+        <Header 
+          firstName={chat.firstName}
+          lastName={chat.lastName}
+          onLiveMessagesToggle={handleLiveMessagesToggle}
+          isLiveMessagesActive={isLiveMessagesActive}
+        />
         <div className="loading-messages">Loading messages...</div>
       </div>
     );
@@ -92,32 +90,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ chat }) => {
 
   return (
     <div className="chat-window">
-      <div className="chat-header">
-        <div className="chat-avatar">
-          {chat.firstName[0]}{chat.lastName[0]}
-        </div>
-        <div className="chat-info">
-          <h3>{chat.firstName} {chat.lastName}</h3>
-          <div className="connection-status">
-            <span className={`status-dot ${isConnected ? 'connected' : 'disconnected'}`}></span>
-            <span className='status-text'>{isConnected ? 'Connected' : 'Disconnected'}</span>
-            {!isConnected && (
-              <button onClick={manualReconnect} className="reconnect-btn">
-                Reconnect
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+      <Header 
+        firstName={chat.firstName}
+        lastName={chat.lastName}
+        onLiveMessagesToggle={handleLiveMessagesToggle}
+        isLiveMessagesActive={isLiveMessagesActive}
+      />
 
       <div className="messages-container">
-        {error && (
-          <div className="error-message">
-            {error}
-            <button onClick={loadMessages}>Retry</button>
-          </div>
-        )}
-
         {messages.length === 0 ? (
           <div className="no-messages">
             No messages yet. Start the conversation!
@@ -125,12 +105,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ chat }) => {
         ) : (
           <div className="messages-list">
             {messages.map((message) => (
-              <Message 
-                key={message.id} 
-                message={message} 
-              />
+              <Message key={message.id} message={message} />
             ))}
-            <div ref={messagesEndRef} />
           </div>
         )}
       </div>
@@ -138,7 +114,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ chat }) => {
       <MessageInput 
         chatId={chat.id}
         onMessageSent={handleMessageSent}
-        disabled={loading}
       />
     </div>
   );
