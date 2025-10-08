@@ -7,9 +7,10 @@ import ChatModal from "./chat-modal/ChatModal";
 import ChatWindow from "./chat-window/ChatWindow";
 import DeleteConfirmationModal from "./delete-confirmation-modal/DeleteConfirmationModal";
 import { Login } from "./login-page/Login";
+import { DropdownMenu } from "./dropdown/DropdownMenu";
 
 export { 
 	ChatList, WelcomeScreen, MessageInput, 
 	Message, Modal, ChatModal, ChatWindow,
-	DeleteConfirmationModal, Login
+	DeleteConfirmationModal, Login, DropdownMenu
 };

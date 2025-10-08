@@ -11,7 +11,8 @@ import './App.css';
 // Компонент для отображения загрузки
 const AppLoading = () => (
   <div className="app-loading">
-    <div className="loading-spinner">Loading...</div>
+    <div className="loading-spinner"></div>
+    <p className="loading-text">Loading...</p>
   </div>
 );
 
