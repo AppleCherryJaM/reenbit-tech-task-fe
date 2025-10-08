@@ -1,12 +1,24 @@
 import React, { useState } from 'react';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { Toaster } from 'react-hot-toast';
 import { ChatList, WelcomeScreen, ChatWindow } from './components/components';
 import { type Chat } from './types';
 import { SocketProvider } from './contexts/SocketContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { Login } from './components/components';
 import './App.css';
 
-function App() {
+// Компонент для отображения загрузки
+const AppLoading = () => (
+  <div className="app-loading">
+    <div className="loading-spinner">Loading...</div>
+  </div>
+);
+
+// Основной контент приложения
+const AppContent = () => {
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
+  const { user, loading } = useAuth();
 
   const handleChatSelect = (chat: Chat) => {
     setSelectedChat(chat);
@@ -15,6 +27,16 @@ function App() {
   const handleNewChat = (chat: Chat) => {
     setSelectedChat(chat); 
   };
+
+  // Showing loading
+  if (loading) {
+    return <AppLoading />;
+  }
+
+  // If user is unauthorized - showing Login page
+  if (!user) {
+    return <Login />;
+  }
 
   return (
     <SocketProvider>
@@ -41,6 +63,19 @@ function App() {
         </div>
       </div>
     </SocketProvider>
+  );
+};
+
+function App() {
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  console.log('🔑 Google Client ID:', googleClientId);
+  
+  return (
+    <GoogleOAuthProvider clientId={googleClientId}>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </GoogleOAuthProvider>
   );
 }
 

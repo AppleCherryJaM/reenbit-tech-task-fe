@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 import type { Chat, Message as MessageType } from '../../types';
 
@@ -16,25 +16,49 @@ interface ChatWindowProps {
 const ChatWindow= ({ chat } : ChatWindowProps) => {
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [isLiveMessagesActive, setIsLiveMessagesActive] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Обработчик новых сообщений
   const handleNewMessage = useCallback((newMessage: MessageType) => {
-    setMessages(prev => [...prev, newMessage]);
-  }, []);
+      console.log('💬 CHAT WINDOW: New message received:', {
+        messageChatId: newMessage.chatId,
+        currentChatId: chat.id,
+        shouldDisplay: newMessage.chatId === chat.id
+      });
+      
+      // Показываем сообщение ТОЛЬКО если оно для этого чата
+      if (newMessage.chatId === chat.id) {
+        setMessages(prev => {
+          if (prev.some(msg => msg.id === newMessage.id)) {
+            console.log('⚠️ Duplicate message detected, skipping');
+            return prev;
+          }
+          console.log('✅ Adding new message to chat state');
+          return [...prev, newMessage];
+        });
+      } else {
+        console.log('🚫 Ignoring message for different chat');
+      }
+    }, [chat.id]); // Зависимость от chat.id
 
   const { joinChat, leaveChat, isConnected } = useSocketEnhanced({
     onNewMessage: handleNewMessage
   });
 
   // Загрузка сообщений чата
-  const loadMessages = useCallback(async () => {
+   const loadMessages = useCallback(async () => {
     try {
       setLoading(true);
+      setMessages([]); // Очищаем сообщения перед загрузкой
       const messagesData = await apiService.getChatMessages(chat.id);
+      console.log('📥 Loaded messages for chat:', chat.id, 'Count:', messagesData.length);
       setMessages(messagesData);
+      setError(null);
     } catch (err) {
-      console.error('Error loading messages:', err);
+      console.error('❌ Error loading messages:', err);
+      setError('Failed to load messages');
     } finally {
       setLoading(false);
     }
@@ -58,16 +82,27 @@ const ChatWindow= ({ chat } : ChatWindowProps) => {
   // При смене чата
   useEffect(() => {
     if (chat.id) {
+      console.log('🔄 Chat changed to:', chat.id);
       loadMessages();
       joinChat(chat.id);
     }
 
     return () => {
       if (chat.id) {
+        console.log('🚪 Leaving chat:', chat.id);
         leaveChat(chat.id);
+        setMessages([]); // Очищаем сообщения при уходе из чата
       }
     };
   }, [chat.id, loadMessages, joinChat, leaveChat]);
+
+    const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   // Обработчик отправки сообщения
   const handleMessageSent = useCallback((newMessage: MessageType) => {

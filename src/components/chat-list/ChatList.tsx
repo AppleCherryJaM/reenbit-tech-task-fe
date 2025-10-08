@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import toast from 'react-hot-toast';
+import { useAuth } from '../../contexts/AuthContext';
 import { type Chat } from '../../types/index';
 import { apiService } from '../../services/api';
 import { ChatModal, DeleteConfirmationModal } from '../components';
@@ -9,35 +9,31 @@ interface ChatListProps {
   onChatSelect: (chat: Chat) => void;
   selectedChatId?: string;
   onNewChat: (chat: Chat) => void;
-  onChatUpdate?: (chat: Chat) => void;
 }
 
 const ChatList: React.FC<ChatListProps> = ({ 
   onChatSelect, 
   selectedChatId, 
-  onNewChat,
-  onChatUpdate 
+  onNewChat
 }) => {
-  const [chats, setChats] = useState<Chat[]>([]);
+  const { chats, refreshChats } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingChat, setEditingChat] = useState<Chat | null>(null);
   const [chatToDelete, setChatToDelete] = useState<Chat | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // Загрузка чатов
+  // Загрузка чатов с поиском
   const loadChats = async (search?: string) => {
     try {
       setLoading(true);
-      const chatsData = await apiService.getChats(search);
-      setChats(chatsData);
+      await refreshChats(search); // Передаем search в refreshChats
       setError(null);
     } catch (err) {
-      const errorMsg = 'Chat loading error';
+      const errorMsg = 'Ошибка загрузки чатов';
       setError(errorMsg);
-      toast.error(errorMsg);
       console.error('Error loading chats:', err);
     } finally {
       setLoading(false);
@@ -46,21 +42,17 @@ const ChatList: React.FC<ChatListProps> = ({
 
   // Обработчик создания чата
   const handleChatCreated = (newChat: Chat) => {
-    setChats(prev => [newChat, ...prev]);
     onNewChat(newChat);
     setIsModalOpen(false);
-    toast.success(`Chat with ${newChat.firstName} ${newChat.lastName} created`);
+    refreshChats(searchTerm); // Обновляем с текущим поиском
   };
 
   // Обработчик обновления чата
   const handleChatUpdated = (updatedChat: Chat) => {
-    setChats(prev => prev.map(chat => 
-      chat.id === updatedChat.id ? updatedChat : chat
-    ));
-    onChatUpdate?.(updatedChat);
+    onNewChat(updatedChat);
     setIsModalOpen(false);
     setEditingChat(null);
-    toast.success('Chat updated');
+    refreshChats(searchTerm); // Обновляем с текущим поиском
   };
 
   // Функция удаления чата
@@ -72,43 +64,32 @@ const ChatList: React.FC<ChatListProps> = ({
     try {
       await apiService.deleteChat(chatToDelete.id);
       
-      // Удаляем чат из состояния
-      setChats(prev => prev.filter(chat => chat.id !== chatToDelete.id));
-      
       // Если удаляемый чат был выбран, сбрасываем выбор
       if (selectedChatId === chatToDelete.id) {
         onChatSelect(null as any);
       }
       
-      toast.success(`Chat with ${chatToDelete.firstName} ${chatToDelete.lastName} deleted`);
+      refreshChats(searchTerm); // Обновляем с текущим поиском
       setChatToDelete(null);
     } catch (error) {
-      toast.error('Chat delete error');
       console.error('Error deleting chat:', error);
     } finally {
       setDeleteLoading(false);
     }
   };
 
-  // Обработчик клика на удаление
-  const handleDeleteClick = (chat: Chat, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setChatToDelete(chat);
-  };
-
-  // Открытие модалки для редактирования
-  const handleEditChat = (chat: Chat, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setEditingChat(chat);
-    setIsModalOpen(true);
-  };
-
   // Обработчик поиска
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
+    const value = e.target.value;
+    setSearchTerm(value);
   };
 
-  // Получить последнее сообщение чата
+  // Загрузка при монтировании и при изменении поиска
+  useEffect(() => {
+    loadChats(searchTerm);
+  }, [searchTerm]);
+
+  // Остальной код без изменений...
   const getLastMessage = (chat: Chat): string => {
     if (!chat.messages || chat.messages.length === 0) {
       return 'No messages yet';
@@ -126,7 +107,6 @@ const ChatList: React.FC<ChatListProps> = ({
     return prefix + lastMessage.text;
   };
 
-  // Форматирование времени
   const formatTime = (dateString: string): string => {
     const date = new Date(dateString);
     return date.toLocaleTimeString('en-US', { 
@@ -136,23 +116,16 @@ const ChatList: React.FC<ChatListProps> = ({
     });
   };
 
-  // Закрытие модалки
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingChat(null);
   };
 
-  // Закрытие модалки подтверждения удаления
   const handleCloseDeleteModal = () => {
     if (!deleteLoading) {
       setChatToDelete(null);
     }
   };
-
-  // Загрузка при монтировании и при изменении поиска
-  useEffect(() => {
-    loadChats(searchTerm);
-  }, [searchTerm]);
 
   if (loading && chats.length === 0) {
     return (
@@ -224,14 +197,18 @@ const ChatList: React.FC<ChatListProps> = ({
                     )}
                     <button 
                       className="delete-chat-btn"
-                      onClick={(e) => handleDeleteClick(chat, e)}
+                      onClick={(e) => setChatToDelete(chat)}
                       title="Delete chat"
                     >
                       🗑️
                     </button>
                     <button 
                       className="edit-chat-btn"
-                      onClick={(e) => handleEditChat(chat, e)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingChat(chat);
+                        setIsModalOpen(true);
+                      }}
                       title="Edit chat"
                     >
                       ✎
@@ -248,7 +225,6 @@ const ChatList: React.FC<ChatListProps> = ({
         )}
       </div>
 
-      {/* Модалка создания/редактирования чата */}
       <ChatModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
@@ -257,7 +233,6 @@ const ChatList: React.FC<ChatListProps> = ({
         editChat={editingChat}
       />
 
-      {/* Модалка подтверждения удаления */}
       <DeleteConfirmationModal
         isOpen={!!chatToDelete}
         onClose={handleCloseDeleteModal}

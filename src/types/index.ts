@@ -5,8 +5,13 @@ export interface User {
   avatar?: string;
 }
 
+export const getChatId = (chat: Chat): string => {
+  return chat.id || chat._id || '';
+};
+
 export interface Chat {
   id: string;
+  _id?: string;
   firstName: string;
   lastName: string;
   userId: string;
