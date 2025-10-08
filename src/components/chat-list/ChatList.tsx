@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { type Chat } from '../../types/index';
 import { apiService } from '../../services/api';
-import { ChatModal, DeleteConfirmationModal } from '../components';
+import { ChatModal, DeleteConfirmationModal, DropdownMenu } from '../components';
 import './ChatList.css';
 
 interface ChatListProps {
@@ -16,7 +16,7 @@ const ChatList: React.FC<ChatListProps> = ({
   selectedChatId, 
   onNewChat
 }) => {
-  const { chats, refreshChats } = useAuth();
+  const { chats, refreshChats, logout } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,18 +41,41 @@ const ChatList: React.FC<ChatListProps> = ({
   };
 
   // Обработчик создания чата
-  const handleChatCreated = (newChat: Chat) => {
-    onNewChat(newChat);
-    setIsModalOpen(false);
-    refreshChats(searchTerm); // Обновляем с текущим поиском
+  const handleChatCreated = async (newChat: Chat) => {
+    try {
+      console.log('✅ Chat created, refreshing list...'); 
+      await refreshChats(searchTerm);
+      
+      onNewChat(newChat);
+      setIsModalOpen(false);
+      
+      console.log('✅ Chat list refreshed with new chat');
+    } catch (error) {
+      console.error('❌ Error refreshing chat list after creation:', error);
+    }
   };
 
   // Обработчик обновления чата
-  const handleChatUpdated = (updatedChat: Chat) => {
-    onNewChat(updatedChat);
-    setIsModalOpen(false);
-    setEditingChat(null);
-    refreshChats(searchTerm); // Обновляем с текущим поиском
+  const handleChatUpdated = async (updatedChat: Chat) => {
+    try {
+      console.log('✅ Chat updated, refreshing list...');
+      
+      // Обновляем список чатов
+      await refreshChats(searchTerm);
+      
+      // Обновляем выбранный чат если это тот же чат
+      if (selectedChatId === updatedChat.id) {
+        onNewChat(updatedChat);
+      }
+      
+      // Закрываем модальное окно и сбрасываем редактирование
+      setIsModalOpen(false);
+      setEditingChat(null);
+      
+      console.log('✅ Chat list refreshed after update');
+    } catch (error) {
+      console.error('❌ Error refreshing chat list after update:', error);
+    }
   };
 
   // Функция удаления чата
@@ -64,7 +87,6 @@ const ChatList: React.FC<ChatListProps> = ({
     try {
       await apiService.deleteChat(chatToDelete.id);
       
-      // Если удаляемый чат был выбран, сбрасываем выбор
       if (selectedChatId === chatToDelete.id) {
         onChatSelect(null as any);
       }
@@ -76,6 +98,16 @@ const ChatList: React.FC<ChatListProps> = ({
     } finally {
       setDeleteLoading(false);
     }
+  };
+
+  const handleLogout = () => {
+    console.log('🚪 Logging out...');
+    logout();
+  };
+
+  const handleNewChatFromMenu = () => {
+    setIsModalOpen(true);
+    setEditingChat(null);
   };
 
   // Обработчик поиска
@@ -142,13 +174,10 @@ const ChatList: React.FC<ChatListProps> = ({
     <div className="chat-list">
       <div className="chat-list-header">
         <h2>Chats</h2>
-        <button 
-          className="new-chat-btn"
-          onClick={() => setIsModalOpen(true)}
-          title="Create new chat"
-        >
-          +
-        </button>
+        <DropdownMenu 
+          onNewChat={handleNewChatFromMenu}
+          onLogout={handleLogout}
+        />
       </div>
 
       <div className="chat-search">

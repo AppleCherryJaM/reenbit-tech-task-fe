@@ -40,40 +40,6 @@ export const Login: React.FC = () => {
         <h1>Welcome to ChatApp</h1>
         <p>Sign in to start chatting</p>
         
-				// Временная кнопка для debug
-<button 
-  onClick={async () => {
-    console.log('🧪 Test: Manual auth check');
-    const token = localStorage.getItem('auth_token');
-    console.log('🧪 Current token:', token);
-    
-    if (token) {
-      try {
-        const response = await fetch('http://localhost:3000/api/auth/me', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        const data = await response.json();
-        console.log('🧪 Auth check result:', data);
-      } catch (error) {
-        console.error('🧪 Auth check error:', error);
-      }
-    }
-  }}
-  style={{
-    marginTop: '20px',
-    padding: '10px',
-    background: '#ffeb3b',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer'
-  }}
->
-  🧪 Test Auth Check
-</button>
-
         <GoogleLogin
           onSuccess={handleGoogleSuccess}
           onError={handleGoogleError}
