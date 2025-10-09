@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import io, { Socket } from 'socket.io-client';
 import type { Message } from '../types';
 
-const API_BASE = import.meta.env.VITE_API_ENDPOINT || 'http://localhost:3000/api';
+const API_BASE = import.meta.env.VITE_SOCKET_URL  || 'http://localhost:3000';
 
 interface UseSocketProps {
   onNewMessage: (message: Message) => void;
