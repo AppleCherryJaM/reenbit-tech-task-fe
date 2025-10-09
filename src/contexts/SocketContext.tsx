@@ -3,6 +3,8 @@ import io, { Socket } from 'socket.io-client';
 import toast from 'react-hot-toast';
 import type { Message } from '../types';
 
+const API_BASE = import.meta.env.VITE_API_ENDPOINT || 'http://localhost:3000/api';
+
 interface SocketContextType {
   isConnected: boolean;
 }
@@ -16,7 +18,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     console.log('🔌 Connecting to global socket...');
     
-    socketRef.current = io('http://localhost:3000', {
+    socketRef.current = io(API_BASE, {
       transports: ['websocket', 'polling'],
     });
 
