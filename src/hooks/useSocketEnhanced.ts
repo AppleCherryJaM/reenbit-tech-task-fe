@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import io, { Socket } from 'socket.io-client';
 import type { Message } from '../types';
 
+const API_BASE = import.meta.env.VITE_API_ENDPOINT || 'http://localhost:3000/api';
+
 interface UseSocketProps {
   onNewMessage: (message: Message) => void;
   onNotification?: (notification: any) => void;
@@ -15,7 +17,7 @@ export const useSocketEnhanced = ({ onNewMessage, onNotification }: UseSocketPro
   const connect = useCallback(() => {
     console.log('🔌 Connecting to chat socket...');
     
-    socketRef.current = io('http://localhost:3000', {
+    socketRef.current = io(API_BASE, {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 10,
