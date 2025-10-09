@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 import type { Chat, Message as MessageType } from '../../types';
 
@@ -16,7 +16,6 @@ interface ChatWindowProps {
 const ChatWindow= ({ chat } : ChatWindowProps) => {
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isLiveMessagesActive, setIsLiveMessagesActive] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -43,7 +42,7 @@ const ChatWindow= ({ chat } : ChatWindowProps) => {
       }
     }, [chat.id]); // Зависимость от chat.id
 
-  const { joinChat, leaveChat, isConnected } = useSocketEnhanced({
+  const { joinChat, leaveChat } = useSocketEnhanced({
     onNewMessage: handleNewMessage
   });
 
@@ -55,10 +54,8 @@ const ChatWindow= ({ chat } : ChatWindowProps) => {
       const messagesData = await apiService.getChatMessages(chat.id);
       console.log('📥 Loaded messages for chat:', chat.id, 'Count:', messagesData.length);
       setMessages(messagesData);
-      setError(null);
     } catch (err) {
       console.error('❌ Error loading messages:', err);
-      setError('Failed to load messages');
     } finally {
       setLoading(false);
     }
@@ -91,7 +88,7 @@ const ChatWindow= ({ chat } : ChatWindowProps) => {
       if (chat.id) {
         console.log('🚪 Leaving chat:', chat.id);
         leaveChat(chat.id);
-        setMessages([]); // Очищаем сообщения при уходе из чата
+        setMessages([]);
       }
     };
   }, [chat.id, loadMessages, joinChat, leaveChat]);

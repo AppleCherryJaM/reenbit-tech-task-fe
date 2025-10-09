@@ -226,7 +226,7 @@ const ChatList: React.FC<ChatListProps> = ({
                     )}
                     <button 
                       className="delete-chat-btn"
-                      onClick={(e) => setChatToDelete(chat)}
+                      onClick={() => setChatToDelete(chat)}
                       title="Delete chat"
                     >
                       🗑️
