@@ -3,7 +3,7 @@ import io, { Socket } from 'socket.io-client';
 import toast from 'react-hot-toast';
 import type { Message } from '../types';
 
-const API_BASE = import.meta.env.VITE_API_ENDPOINT || 'http://localhost:3000/api';
+const API_BASE = import.meta.env.VITE_SOCKET_URL  || 'http://localhost:3000';
 
 interface SocketContextType {
   isConnected: boolean;
